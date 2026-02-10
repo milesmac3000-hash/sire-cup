@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import json
@@ -7,6 +7,8 @@ from collections import defaultdict
 import os
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'sire-cup-secret-key-2026')
+
 # Use PostgreSQL on Render, SQLite locally
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///sirecup.db')
 # Render uses postgres:// but SQLAlchemy needs postgresql://
@@ -163,6 +165,21 @@ class Announcement(db.Model):
 
     def __repr__(self):
         return f'<Announcement {self.title}>'
+
+class ScheduleEvent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    event_date = db.Column(db.DateTime, nullable=False)
+    start_time = db.Column(db.String(20), nullable=True)
+    end_time = db.Column(db.String(20), nullable=True)
+    location = db.Column(db.String(200), nullable=True)
+    event_type = db.Column(db.String(50), nullable=False, default='general')  # golf, dinner, activity, travel, general
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+
+    def __repr__(self):
+        return f'<ScheduleEvent {self.title} on {self.event_date}>'
 
 class TripInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -745,7 +762,86 @@ def delete_announcement(announcement_id):
     announcement = Announcement.query.get_or_404(announcement_id)
     db.session.delete(announcement)
     db.session.commit()
+    flash('Announcement deleted', 'success')
     return redirect(url_for('announcements'))
+
+
+# --- Schedule Routes ---
+@app.route('/schedule')
+def schedule():
+    events = ScheduleEvent.query.order_by(ScheduleEvent.event_date, ScheduleEvent.start_time).all()
+    courses = Course.query.all()
+    
+    # Group events by date
+    events_by_date = {}
+    for event in events:
+        date_key = event.event_date.strftime('%Y-%m-%d')
+        if date_key not in events_by_date:
+            events_by_date[date_key] = []
+        events_by_date[date_key].append(event)
+    
+    return render_template('schedule.html', events=events, events_by_date=events_by_date, courses=courses)
+
+@app.route('/create_event', methods=['GET', 'POST'])
+def create_event():
+    courses = Course.query.all()
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form.get('description', '')
+        event_date = datetime.strptime(request.form['event_date'], '%Y-%m-%d')
+        start_time = request.form.get('start_time', '')
+        end_time = request.form.get('end_time', '')
+        location = request.form.get('location', '')
+        event_type = request.form['event_type']
+        course_id = request.form.get('course_id') if request.form.get('course_id') else None
+        notes = request.form.get('notes', '')
+        
+        new_event = ScheduleEvent(
+            title=title,
+            description=description,
+            event_date=event_date,
+            start_time=start_time,
+            end_time=end_time,
+            location=location,
+            event_type=event_type,
+            course_id=int(course_id) if course_id else None,
+            notes=notes
+        )
+        db.session.add(new_event)
+        db.session.commit()
+        flash('Event added to schedule!', 'success')
+        return redirect(url_for('schedule'))
+    
+    return render_template('create_event.html', courses=courses)
+
+@app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+def edit_event(event_id):
+    event = ScheduleEvent.query.get_or_404(event_id)
+    courses = Course.query.all()
+    
+    if request.method == 'POST':
+        event.title = request.form['title']
+        event.description = request.form.get('description', '')
+        event.event_date = datetime.strptime(request.form['event_date'], '%Y-%m-%d')
+        event.start_time = request.form.get('start_time', '')
+        event.end_time = request.form.get('end_time', '')
+        event.location = request.form.get('location', '')
+        event.event_type = request.form['event_type']
+        event.course_id = int(request.form.get('course_id')) if request.form.get('course_id') else None
+        event.notes = request.form.get('notes', '')
+        db.session.commit()
+        flash('Event updated!', 'success')
+        return redirect(url_for('schedule'))
+    
+    return render_template('edit_event.html', event=event, courses=courses)
+
+@app.route('/delete_event/<int:event_id>')
+def delete_event(event_id):
+    event = ScheduleEvent.query.get_or_404(event_id)
+    db.session.delete(event)
+    db.session.commit()
+    flash('Event deleted', 'success')
+    return redirect(url_for('schedule'))
 
 
 # --- API endpoint for standings ---

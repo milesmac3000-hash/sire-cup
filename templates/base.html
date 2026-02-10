@@ -196,14 +196,14 @@
                     <a href="{{ url_for('travel') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
                         <i class="fas fa-plane mr-2"></i>Travel
                     </a>
+                    <a href="{{ url_for('schedule') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
+                        <i class="fas fa-calendar-alt mr-2"></i>Schedule
+                    </a>
                     <a href="{{ url_for('rounds') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
                         <i class="fas fa-flag mr-2"></i>Rounds
                     </a>
                     <a href="{{ url_for('expenses') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
                         <i class="fas fa-receipt mr-2"></i>Expenses
-                    </a>
-                    <a href="{{ url_for('announcements') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
-                        <i class="fas fa-bullhorn mr-2"></i>News
                     </a>
                 </div>
                 
@@ -232,6 +232,9 @@
                 <a href="{{ url_for('courses') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
                     <i class="fas fa-golf-ball mr-3 w-5"></i>Courses
                 </a>
+                <a href="{{ url_for('schedule') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
+                    <i class="fas fa-calendar-alt mr-3 w-5"></i>Schedule
+                </a>
                 <a href="{{ url_for('rounds') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
                     <i class="fas fa-flag mr-3 w-5"></i>Rounds
                 </a>
@@ -247,6 +250,29 @@
             </div>
         </div>
     </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        {% for category, message in messages %}
+        <div class="mb-2 p-4 rounded-xl flex items-center justify-between
+            {% if category == 'error' %}bg-red-100 text-red-700 border border-red-200
+            {% elif category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-200
+            {% else %}bg-green-100 text-green-700 border border-green-200{% endif %}"
+            onclick="this.remove()">
+            <div class="flex items-center">
+                {% if category == 'error' %}<i class="fas fa-exclamation-circle mr-3"></i>
+                {% elif category == 'warning' %}<i class="fas fa-exclamation-triangle mr-3"></i>
+                {% else %}<i class="fas fa-check-circle mr-3"></i>{% endif %}
+                {{ message }}
+            </div>
+            <button class="text-current opacity-50 hover:opacity-100"><i class="fas fa-times"></i></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
