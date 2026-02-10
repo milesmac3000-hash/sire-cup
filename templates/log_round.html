@@ -1,50 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %}Log Round Scores - Sire Cup{% endblock %}
+{% block title %}Log Round at {{ course.name }} | Sire Cup{% endblock %}
 
 {% block content %}
-    <h1 class="mb-8">Log Round Scores for <span class="text-yellow-600">{{ course.name }}</span></h1>
-    <p class="mb-6"><a href="{{ url_for('rounds') }}">Back to All Rounds</a></p>
+<!-- Header -->
+<div class="mb-8">
+    <a href="{{ url_for('rounds') }}" class="inline-flex items-center text-gray-500 hover:text-masters-green transition-colors mb-4">
+        <i class="fas fa-arrow-left mr-2"></i>Back to Rounds
+    </a>
+    <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900">
+        <i class="fas fa-clipboard-list text-masters-green mr-3"></i>Log Round
+    </h1>
+    <p class="text-gray-500 mt-2">{{ course.name }} • Par {{ course_pars|sum }}</p>
+</div>
 
-    <form method="POST" action="{{ url_for('log_round', course_id=course.id) }}" class="space-y-6">
-        <div class="mb-6">
-            <label for="round_notes" class="block text-lg font-medium text-gray-700 mb-1">Round Notes (Optional):</label>
-            <textarea id="round_notes" name="round_notes" rows="3"
-                      class="form-input"></textarea>
+<form method="POST">
+    <!-- Notes -->
+    <div class="glass rounded-2xl border border-gray-100 p-6 mb-6">
+        <label for="round_notes" class="block text-sm font-semibold text-gray-700 mb-2">Round Notes (optional)</label>
+        <textarea name="round_notes" id="round_notes" rows="2"
+            class="form-input w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-masters-green focus:ring-0"
+            placeholder="Weather conditions, memorable moments, etc."></textarea>
+    </div>
+    
+    <!-- Score Entry -->
+    {% for player in players %}
+    <div class="glass rounded-2xl border border-gray-100 overflow-hidden mb-4">
+        <div class="gradient-bg px-6 py-4 flex items-center space-x-4">
+            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">
+                {{ player.name[0] }}
+            </div>
+            <div>
+                <h3 class="text-white font-bold">{{ player.name }}</h3>
+                <p class="text-white/70 text-sm">HCP {{ player.handicap }}</p>
+            </div>
         </div>
-
-        <h2 class="mb-6">Enter Player Scores</h2>
-
-        <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
-            <table class="min-w-full divide-y divide-gray-200 bg-white">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Player</th>
-                        {% for i in range(1, 19) %}
-                            <th class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">H{{ i }}<br>(P{{ course_pars[i-1] }})</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {% for player in players %}
-                        <tr>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10">{{ player.name }}</td>
-                            {% for i in range(1, 19) %}
-                                <td class="px-2 py-3 whitespace-nowrap text-center">
-                                    <input type="number" name="player_{{ player.id }}_hole_{{ i }}" min="1" max="15" value="{{ course_pars[i-1] }}"
-                                           class="w-14 h-9 text-center text-sm border-gray-300 rounded-md focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
-                                </td>
-                            {% endfor %}
-                        </tr>
+        <div class="p-4">
+            <!-- Front 9 -->
+            <div class="mb-4">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Front 9</p>
+                <div class="grid grid-cols-9 gap-2">
+                    {% for i in range(1, 10) %}
+                    <div class="text-center">
+                        <label class="block text-xs text-gray-400 mb-1">{{ i }}</label>
+                        <div class="text-xs text-masters-green mb-1">P{{ course_pars[i-1] }}</div>
+                        <input type="number" name="player_{{ player.id }}_hole_{{ i }}" 
+                            min="1" max="15"
+                            class="w-full px-1 py-2 text-center border-2 border-gray-200 rounded-lg text-sm focus:border-masters-green focus:ring-0"
+                            placeholder="-">
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
+                </div>
+            </div>
+            
+            <!-- Back 9 -->
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Back 9</p>
+                <div class="grid grid-cols-9 gap-2">
+                    {% for i in range(10, 19) %}
+                    <div class="text-center">
+                        <label class="block text-xs text-gray-400 mb-1">{{ i }}</label>
+                        <div class="text-xs text-masters-gold mb-1">P{{ course_pars[i-1] }}</div>
+                        <input type="number" name="player_{{ player.id }}_hole_{{ i }}" 
+                            min="1" max="15"
+                            class="w-full px-1 py-2 text-center border-2 border-gray-200 rounded-lg text-sm focus:border-masters-green focus:ring-0"
+                            placeholder="-">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
-
-        <div class="mt-8">
-            <button type="submit" class="btn-primary">
-                Save Round Scores
-            </button>
-        </div>
-    </form>
+    </div>
+    {% endfor %}
+    
+    <div class="flex space-x-4">
+        <button type="submit" class="btn-primary flex-1 px-6 py-4 rounded-xl text-white font-semibold flex items-center justify-center space-x-2 text-lg">
+            <i class="fas fa-save"></i>
+            <span>Save Round</span>
+        </button>
+        <a href="{{ url_for('rounds') }}" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all text-gray-700 font-semibold flex items-center justify-center">
+            Cancel
+        </a>
+    </div>
+</form>
 {% endblock %}

@@ -1,46 +1,81 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Trip Info - Sire Cup{% endblock %}
+{% block title %}Edit Trip Info | Sire Cup{% endblock %}
 
 {% block content %}
-    <h1 class="mb-8">Edit Trip Information</h1>
-    <form method="POST" action="{{ url_for('edit_trip_info') }}" class="space-y-6">
-        <div>
-            <label for="title" class="block text-lg font-medium text-gray-700 mb-1">Trip Title:</label>
-            <input type="text" id="title" name="title" value="{{ trip_info.title }}" required
-                   class="form-input">
-        </div>
+<!-- Header -->
+<div class="mb-8">
+    <a href="{{ url_for('index') }}" class="inline-flex items-center text-gray-500 hover:text-masters-green transition-colors mb-4">
+        <i class="fas fa-arrow-left mr-2"></i>Back to Home
+    </a>
+    <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900">
+        <i class="fas fa-cog text-masters-green mr-3"></i>Trip Settings
+    </h1>
+</div>
 
+<div class="glass rounded-2xl border border-gray-100 overflow-hidden max-w-2xl">
+    <div class="gradient-bg px-6 py-4">
+        <h3 class="text-white font-bold text-lg">Trip Information</h3>
+    </div>
+    <form method="POST" class="p-6 space-y-6">
         <div>
-            <label for="dates" class="block text-lg font-medium text-gray-700 mb-1">Dates:</label>
-            <input type="text" id="dates" name="dates" value="{{ trip_info.dates }}" required
-                   class="form-input">
+            <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">Event Title</label>
+            <input type="text" name="title" id="title" value="{{ trip_info.title }}" required
+                class="form-input w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-masters-green focus:ring-0"
+                placeholder="e.g., Sire Cup 2026">
         </div>
-
-        <div>
-            <label for="location" class="block text-lg font-medium text-gray-700 mb-1">Location:</label>
-            <input type="text" id="location" name="location" value="{{ trip_info.location }}" required
-                   class="form-input">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="dates" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-calendar-alt text-masters-green mr-1"></i>Dates
+                </label>
+                <input type="text" name="dates" id="dates" value="{{ trip_info.dates }}" required
+                    class="form-input w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-masters-green focus:ring-0"
+                    placeholder="e.g., October 23-27, 2026">
+            </div>
+            
+            <div>
+                <label for="location" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-map-marker-alt text-masters-gold mr-1"></i>Location
+                </label>
+                <input type="text" name="location" id="location" value="{{ trip_info.location }}" required
+                    class="form-input w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-masters-green focus:ring-0"
+                    placeholder="e.g., Pebble Beach, CA">
+            </div>
         </div>
-
+        
         <div>
-            <label for="message" class="block text-lg font-medium text-gray-700 mb-1">Message:</label>
-            <textarea id="message" name="message" rows="6" required
-                      class="form-input">{{ trip_info.message }}</textarea>
+            <label for="team_names" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-users text-masters-green mr-1"></i>Team Names (comma-separated)
+            </label>
+            <input type="text" name="team_names" id="team_names" 
+                value="{{ trip_info.get_team_names_list()|join(', ') }}" required
+                class="form-input w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-masters-green focus:ring-0"
+                placeholder="e.g., Team Augusta, Team Magnolia">
+            <p class="mt-2 text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>Enter two team names separated by a comma
+            </p>
         </div>
-
+        
         <div>
-            <label for="team_names" class="block text-lg font-medium text-gray-700 mb-1">Team Names (comma-separated, e.g., Team Augusta, Team Magnolia):</label>
-            <input type="text" id="team_names" name="team_names" value="{{ trip_info.get_team_names_list()|join(', ') }}" required
-                   class="form-input">
-            <p class="text-sm text-gray-500 mt-2">Enter team names, separated by commas. (e.g., Team Alpha, Team Beta)</p>
+            <label for="message" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-bullhorn text-masters-gold mr-1"></i>Commissioner's Message
+            </label>
+            <textarea name="message" id="message" rows="4" required
+                class="form-input w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-masters-green focus:ring-0"
+                placeholder="A message to display on the homepage...">{{ trip_info.message }}</textarea>
         </div>
-
-        <div>
-            <button type="submit" class="btn-primary">
-                Save Changes
+        
+        <div class="pt-4 flex space-x-4">
+            <button type="submit" class="btn-primary flex-1 px-6 py-3 rounded-xl text-white font-semibold flex items-center justify-center space-x-2">
+                <i class="fas fa-save"></i>
+                <span>Save Changes</span>
             </button>
+            <a href="{{ url_for('index') }}" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all text-gray-700 font-semibold flex items-center justify-center">
+                Cancel
+            </a>
         </div>
     </form>
-    <p class="mt-8"><a href="{{ url_for('index') }}">Back to Dashboard</a></p>
+</div>
 {% endblock %}

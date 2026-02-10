@@ -171,7 +171,9 @@ def get_or_create_trip_info():
 def index():
     trip_info = get_or_create_trip_info()
     players = Player.query.all()
-    return render_template('index.html', players=players, agenda=trip_info)
+    courses = Course.query.all()
+    rounds = Round.query.all()
+    return render_template('index.html', players=players, agenda=trip_info, courses=courses, rounds=rounds)
 
 @app.route('/edit_trip_info', methods=['GET', 'POST'])
 def edit_trip_info():

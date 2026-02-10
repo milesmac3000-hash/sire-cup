@@ -1,45 +1,125 @@
 {% extends "base.html" %}
 
-{% block title %}Scores for {{ round_data.course.name }} - {{ round_data.date.strftime('%Y-%m-%d') }} - Sire Cup{% endblock %}
+{% block title %}Round Scores | Sire Cup{% endblock %}
 
 {% block content %}
-    <h1 class="mb-8">Scores for <span class="text-yellow-600">{{ round_data.course.name }}</span> - {{ round_data.date.strftime('%Y-%m-%d') }}</h1>
-    <p class="mb-6"><a href="{{ url_for('rounds') }}">Back to All Rounds</a></p>
+<!-- Header -->
+<div class="mb-8">
+    <a href="{{ url_for('rounds') }}" class="inline-flex items-center text-gray-500 hover:text-masters-green transition-colors mb-4">
+        <i class="fas fa-arrow-left mr-2"></i>Back to Rounds
+    </a>
+    <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900">
+        <i class="fas fa-trophy text-masters-gold mr-3"></i>{{ round_data.course.name }}
+    </h1>
+    <p class="text-gray-500 mt-2">{{ round_data.date.strftime('%B %d, %Y') }} • Par {{ round_data.course.get_pars_list()|sum }}</p>
+</div>
 
-    {% if round_data.notes %}
-        <p class="text-gray-700 italic mb-6">Notes: {{ round_data.notes }}</p>
-    {% endif %}
+{% if round_data.notes %}
+<div class="glass rounded-2xl p-6 border border-gray-100 mb-6">
+    <div class="flex items-start space-x-4">
+        <div class="w-10 h-10 rounded-full bg-masters-green/10 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-comment text-masters-green"></i>
+        </div>
+        <div>
+            <h4 class="font-semibold text-gray-800 mb-1">Round Notes</h4>
+            <p class="text-gray-600">{{ round_data.notes }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
 
-    <h2 class="mb-6">Player Scores</h2>
+<!-- Leaderboard -->
+{% if player_scores %}
+<div class="glass rounded-2xl border border-gray-100 overflow-hidden mb-6">
+    <div class="gradient-bg px-6 py-4">
+        <h3 class="text-white font-bold text-lg">
+            <i class="fas fa-list-ol mr-2"></i>Leaderboard
+        </h3>
+    </div>
+    <div class="divide-y divide-gray-100">
+        {% set course_par = round_data.course.get_pars_list()|sum %}
+        {% for score in player_scores|sort(attribute='total_score') %}
+        {% set to_par = score.total_score - course_par %}
+        <div class="p-4 hover:bg-gray-50 transition-all">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 rounded-full {% if loop.index == 1 %}gold-gradient{% else %}bg-gray-200{% endif %} flex items-center justify-center text-white font-bold text-sm">
+                        {{ loop.index }}
+                    </div>
+                    <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
+                        {{ score.player.name[0] }}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900">{{ score.player.name }}</h4>
+                        <p class="text-sm text-gray-500">HCP {{ score.player.handicap }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold {% if to_par < 0 %}text-red-600{% elif to_par == 0 %}text-gray-800{% else %}text-masters-green{% endif %}">
+                        {{ score.total_score }}
+                    </div>
+                    <div class="text-sm {% if to_par < 0 %}text-red-600{% elif to_par == 0 %}text-gray-500{% else %}text-masters-green{% endif %}">
+                        {% if to_par < 0 %}{{ to_par }}{% elif to_par == 0 %}E{% else %}+{{ to_par }}{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 
-    <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200 mb-8">
-        <table class="min-w-full divide-y divide-gray-200 bg-white">
+<!-- Detailed Scorecard -->
+<div class="glass rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="gold-gradient px-6 py-4">
+        <h3 class="text-white font-bold text-lg">
+            <i class="fas fa-table mr-2"></i>Full Scorecard
+        </h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Player</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-700">Player</th>
                     {% for i in range(1, 19) %}
-                        <th class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">H{{ i }}<br>(P{{ round_data.course.get_pars_list()[i-1] }})</th>
+                    <th class="px-2 py-3 text-center font-semibold text-gray-500 text-xs">{{ i }}</th>
                     {% endfor %}
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">+/- Par</th>
+                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Total</th>
+                </tr>
+                <tr class="bg-gray-100">
+                    <td class="px-4 py-2 text-xs text-gray-500">Par</td>
+                    {% for par in round_data.course.get_pars_list() %}
+                    <td class="px-2 py-2 text-center text-xs text-gray-500">{{ par }}</td>
+                    {% endfor %}
+                    <td class="px-4 py-2 text-center text-xs font-semibold text-gray-700">{{ round_data.course.get_pars_list()|sum }}</td>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
-                {% for player_score in player_scores %}
-                    <tr>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10">{{ player_score.player.name }}</td>
-                        {% for score in player_score.get_hole_scores_list() %}
-                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm">{{ score }}</td>
-                        {% endfor %}
-                        <td class="px-4 py-3 whitespace-nowrap text-center text-base font-bold text-green-700">{{ player_score.total_score }}</td>
-                        {% set total_par = round_data.course.get_pars_list()|sum %}
-                        {% set plus_minus_par = player_score.total_score - total_par %}
-                        <td class="px-4 py-3 whitespace-nowrap text-center text-base font-bold {% if plus_minus_par < 0 %}text-green-600{% elif plus_minus_par > 0 %}text-red-600{% else %}text-gray-700{% endif %}">
-                            {% if plus_minus_par > 0 %}+{{ plus_minus_par }}{% elif plus_minus_par < 0 %}{{ plus_minus_par }}{% else %}E{% endif %}
-                        </td>
-                    </tr>
+            <tbody class="divide-y divide-gray-100">
+                {% for score in player_scores|sort(attribute='total_score') %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                        {{ score.player.name }}
+                    </td>
+                    {% set pars = round_data.course.get_pars_list() %}
+                    {% for hole_score in score.get_hole_scores_list() %}
+                    {% set par = pars[loop.index0] %}
+                    <td class="px-2 py-3 text-center {% if hole_score < par %}text-red-600 font-bold{% elif hole_score > par %}text-masters-green{% else %}text-gray-700{% endif %}">
+                        {{ hole_score }}
+                    </td>
+                    {% endfor %}
+                    <td class="px-4 py-3 text-center font-bold text-gray-900">{{ score.total_score }}</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
+{% else %}
+<div class="glass rounded-2xl p-12 border border-gray-100 text-center">
+    <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-clipboard-list text-4xl text-gray-300"></i>
+    </div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">No Scores Recorded</h3>
+    <p class="text-gray-500">No player scores were logged for this round</p>
+</div>
+{% endif %}
 {% endblock %}

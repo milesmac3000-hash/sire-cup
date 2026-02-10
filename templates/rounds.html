@@ -1,36 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Log & View Scores - Sire Cup{% endblock %}
+{% block title %}Rounds | Sire Cup{% endblock %}
 
 {% block content %}
-    <h1 class="mb-8">Log & View Scores</h1>
-    <p class="mb-6"><a href="{{ url_for('index') }}">Back to Dashboard</a></p>
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div>
+        <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-flag text-masters-green mr-3"></i>Rounds & Scores
+        </h1>
+        <p class="text-gray-500">Track your rounds and see how everyone's playing</p>
+    </div>
+</div>
 
-    <h2 class="mb-6">Recorded Rounds</h2>
-    {% if rounds %}
-        <ul class="space-y-4 mb-10">
-            {% for round in rounds %}
-                <li class="card">
-                    <h3 class="text-green-700 mb-2">{{ round.course.name }} - {{ round.date.strftime('%Y-%m-%d') }}</h3>
-                    {% if round.notes %}
-                        <p class="text-gray-600 italic">Notes: {{ round.notes }}</p>
-                    {% endif %}
-                    <p class="mt-4"><a href="{{ url_for('view_round_scores', round_id=round.id) }}" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition duration-200 text-sm">View Scores</a></p>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="text-gray-600 mb-10">No rounds recorded yet.</p>
-    {% endif %}
-
-    <h2 class="mb-6">Log a New Round:</h2>
-    {% if courses %}
-        <ul class="space-y-2">
+<!-- Courses to Play -->
+{% if courses %}
+<div class="glass rounded-2xl border border-gray-100 overflow-hidden mb-8">
+    <div class="gradient-bg px-6 py-4 flex items-center justify-between">
+        <h3 class="text-white font-bold text-lg">
+            <i class="fas fa-golf-ball mr-2"></i>Log New Round
+        </h3>
+        <a href="{{ url_for('add_course') }}" class="text-white/80 hover:text-white text-sm flex items-center space-x-1">
+            <i class="fas fa-plus"></i>
+            <span>Add Course</span>
+        </a>
+    </div>
+    <div class="p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for course in courses %}
-                <li class="bg-gray-50 p-3 rounded-md shadow-sm"><a href="{{ url_for('log_round', course_id=course.id) }}">{{ course.name }}</a></li>
+            <a href="{{ url_for('log_round', course_id=course.id) }}" class="group p-6 rounded-xl border-2 border-gray-100 hover:border-masters-green hover:bg-masters-green/5 transition-all">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center">
+                        <i class="fas fa-flag text-white"></i>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-300 group-hover:text-masters-green transition-colors"></i>
+                </div>
+                <h4 class="font-bold text-gray-900 text-lg">{{ course.name }}</h4>
+                <p class="text-sm text-gray-500 mt-1">Par {{ course.get_pars_list()|sum }} • 18 holes</p>
+            </a>
             {% endfor %}
-        </ul>
-    {% else %}
-        <p class="text-gray-600">No courses available. Please <a href="{{ url_for('add_course') }}">add a course</a> first.</p>
-    {% endif %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="glass rounded-2xl p-8 border border-gray-100 text-center mb-8">
+    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-golf-ball text-3xl text-gray-300"></i>
+    </div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">No Courses Added</h3>
+    <p class="text-gray-500 mb-4">Add a course to start logging rounds</p>
+    <a href="{{ url_for('add_course') }}" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold inline-flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Add Course</span>
+    </a>
+</div>
+{% endif %}
+
+<!-- Past Rounds -->
+{% if rounds %}
+<div class="glass rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="gold-gradient px-6 py-4">
+        <h3 class="text-white font-bold text-lg">
+            <i class="fas fa-history mr-2"></i>Round History
+        </h3>
+    </div>
+    <div class="divide-y divide-gray-100">
+        {% for round in rounds %}
+        <a href="{{ url_for('view_round_scores', round_id=round.id) }}" class="block p-6 hover:bg-gray-50 transition-all">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full gold-gradient flex items-center justify-center text-white">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900 text-lg">{{ round.course.name }}</h4>
+                        <p class="text-sm text-gray-500">{{ round.date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                        {{ round.scores|length }} players
+                    </span>
+                    <i class="fas fa-chevron-right text-gray-300"></i>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% elif courses %}
+<div class="glass rounded-2xl p-8 border border-gray-100 text-center">
+    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-clipboard-list text-3xl text-gray-300"></i>
+    </div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">No Rounds Logged</h3>
+    <p class="text-gray-500">Select a course above to log your first round</p>
+</div>
+{% endif %}
 {% endblock %}

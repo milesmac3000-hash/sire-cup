@@ -1,38 +1,101 @@
 {% extends "base.html" %}
 
-{% block title %}Travel Plans - Sire Cup{% endblock %}
+{% block title %}Travel Plans | Sire Cup{% endblock %}
 
 {% block content %}
-    <h1 class="mb-8">Travel Plans</h1>
-    <p class="mb-6"><a href="{{ url_for('index') }}">Back to Dashboard</a></p>
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div>
+        <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-plane text-masters-green mr-3"></i>Travel Plans
+        </h1>
+        <p class="text-gray-500">Coordinate arrivals, departures & airport pickups</p>
+    </div>
+</div>
 
-    <h2 class="mb-4">All Travel Plans</h2>
-    {% if travel_plans %}
-        <div class="space-y-6 mb-10">
-            {% for plan in travel_plans %}
-                <div class="card">
-                    <h3 class="text-green-700">{{ plan.player.name }}</h3>
-                    <p class="text-gray-700 mt-2"><strong>Arrival:</strong> {{ plan.arrival_date.strftime('%Y-%m-%d') }}
-                        {% if plan.arrival_time %}, <span class="font-medium">{{ plan.arrival_time }}</span>{% endif %}
-                        {% if plan.airport_name %} at <span class="font-medium">{{ plan.airport_name }}</span>{% endif %}
-                        {% if plan.flight_number %} (Flight: <span class="font-medium">{{ plan.flight_number }}</span>){% endif %}
-                    </p>
-                    <p class="text-gray-700"><strong>Departure:</strong> {{ plan.departure_date.strftime('%Y-%m-%d') }}</p>
-                    {% if plan.notes %}
-                        <p class="text-gray-600 italic mt-2">Notes: {{ plan.notes }}</p>
-                    {% endif %}
-                    <p class="mt-4"><a href="{{ url_for('add_travel_plan', player_id=plan.player.id) }}">Edit Travel Plan</a></p>
+<!-- Travel Timeline -->
+{% if travel_plans %}
+<div class="glass rounded-2xl border border-gray-100 overflow-hidden mb-8">
+    <div class="gradient-bg px-6 py-4">
+        <h3 class="text-white font-bold text-lg">
+            <i class="fas fa-calendar-alt mr-2"></i>Arrival Schedule
+        </h3>
+    </div>
+    <div class="divide-y divide-gray-100">
+        {% for plan in travel_plans %}
+        <div class="p-6 hover:bg-gray-50 transition-all">
+            <div class="flex flex-col md:flex-row md:items-center justify-between">
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold flex-shrink-0">
+                        {{ plan.player.name[0] }}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900 text-lg">{{ plan.player.name }}</h4>
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-600">
+                            <span class="flex items-center">
+                                <i class="fas fa-plane-arrival text-masters-green mr-2"></i>
+                                {{ plan.arrival_date.strftime('%b %d') }}{% if plan.arrival_time %} at {{ plan.arrival_time }}{% endif %}
+                            </span>
+                            <span class="flex items-center">
+                                <i class="fas fa-plane-departure text-masters-gold mr-2"></i>
+                                {{ plan.departure_date.strftime('%b %d') }}
+                            </span>
+                        </div>
+                        {% if plan.airport_name or plan.flight_number %}
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm">
+                            {% if plan.airport_name %}
+                            <span class="px-3 py-1 bg-masters-green/10 text-masters-green rounded-full">
+                                <i class="fas fa-map-marker-alt mr-1"></i>{{ plan.airport_name }}
+                            </span>
+                            {% endif %}
+                            {% if plan.flight_number %}
+                            <span class="px-3 py-1 bg-masters-gold/10 text-masters-gold rounded-full">
+                                <i class="fas fa-ticket-alt mr-1"></i>{{ plan.flight_number }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% if plan.notes %}
+                        <p class="mt-2 text-gray-500 text-sm italic">{{ plan.notes }}</p>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endfor %}
+            </div>
         </div>
-    {% else %}
-        <p class="text-gray-600 mb-10">No travel plans added yet.</p>
-    {% endif %}
-
-    <h2 class="mb-4">Add/Edit Travel Plan for a Player:</h2>
-    <ul class="space-y-2 mb-6">
-        {% for player in players %}
-            <li class="bg-gray-50 p-3 rounded-md shadow-sm"><a href="{{ url_for('add_travel_plan', player_id=player.id) }}">{{ player.name }}</a></li>
         {% endfor %}
-    </ul>
+    </div>
+</div>
+{% else %}
+<div class="glass rounded-2xl p-12 border border-gray-100 text-center mb-8">
+    <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-plane text-4xl text-gray-300"></i>
+    </div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">No Travel Plans Yet</h3>
+    <p class="text-gray-500 mb-6">Add travel plans for each player to coordinate arrivals</p>
+</div>
+{% endif %}
+
+<!-- Players Without Plans -->
+{% set players_with_plans = travel_plans|map(attribute='player_id')|list %}
+{% set players_needing_plans = players|rejectattr('id', 'in', players_with_plans)|list %}
+{% if players_needing_plans %}
+<div class="glass rounded-2xl p-6 border border-gray-100">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-user-clock mr-2 text-gray-400"></i>Needs Travel Info
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {% for player in players_needing_plans %}
+        <a href="{{ url_for('add_travel_plan', player_id=player.id) }}" class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-masters-green hover:text-white transition-all group">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gray-200 group-hover:bg-white/20 flex items-center justify-center font-bold text-gray-600 group-hover:text-white transition-all">
+                    {{ player.name[0] }}
+                </div>
+                <span class="font-semibold">{{ player.name }}</span>
+            </div>
+            <i class="fas fa-plus group-hover:text-white text-gray-400 transition-colors"></i>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}

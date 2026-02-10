@@ -1,46 +1,355 @@
 {% extends "base.html" %}
-{% from "_macros.html" import render_field %}
 
-{% block title %}{{ agenda.title }}{% endblock %}
+{% block title %}{{ agenda.title }} | Sire Cup{% endblock %}
 
 {% block content %}
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-4xl font-extrabold text-green-800">{{ agenda.title }}</h1>
-        <a href="{{ url_for('edit_trip_info') }}" class="px-3 py-1 text-sm bg-yellow-600 text-white font-semibold rounded-md shadow-sm hover:bg-yellow-700 transition duration-200">Edit Trip Info</a>
+<!-- Hero Section -->
+<div class="gradient-bg rounded-3xl p-8 md:p-12 mb-8 relative overflow-hidden shadow-2xl">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-10 right-10 w-64 h-64 rounded-full border-2 border-white"></div>
+        <div class="absolute bottom-10 left-10 w-48 h-48 rounded-full border-2 border-white"></div>
+        <div class="absolute top-1/2 left-1/2 w-96 h-96 rounded-full border border-white transform -translate-x-1/2 -translate-y-1/2"></div>
     </div>
-    <p class="text-lg mb-2"><strong class="font-semibold">Dates:</strong> {{ agenda.dates }}</p>
-    <p class="text-lg mb-4"><strong class="font-semibold">Location:</b> {{ agenda.location }}</p>
-    <p class="text-gray-700 mb-8">{{ agenda.message }}</p>
+    
+    <div class="relative z-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div>
+                <p class="text-masters-gold font-semibold text-sm uppercase tracking-widest mb-2">
+                    <i class="fas fa-trophy mr-2"></i>The Annual Showdown
+                </p>
+                <h1 class="font-display text-4xl md:text-5xl lg:text-6xl text-white font-bold leading-tight">
+                    {{ agenda.title.split(' - ')[0] if ' - ' in agenda.title else agenda.title }}
+                </h1>
+            </div>
+            <a href="{{ url_for('edit_trip_info') }}" class="mt-4 md:mt-0 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all flex items-center space-x-2">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-6 text-white/90 mb-8">
+            <div class="flex items-center">
+                <i class="fas fa-calendar-alt mr-2 text-masters-gold"></i>
+                <span>{{ agenda.dates }}</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-map-marker-alt mr-2 text-masters-gold"></i>
+                <span>{{ agenda.location }}</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-users mr-2 text-masters-gold"></i>
+                <span>{{ players|length }} Players</span>
+            </div>
+        </div>
+        
+        <!-- Countdown Timer -->
+        <div class="glass rounded-2xl p-6 inline-block">
+            <p class="text-masters-green text-sm font-semibold uppercase tracking-wide mb-3">Countdown to Tee Time</p>
+            <div id="countdown" class="flex items-center space-x-4">
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-masters-green" id="days">--</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Days</div>
+                </div>
+                <div class="text-2xl text-gray-300">:</div>
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-masters-green" id="hours">--</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Hours</div>
+                </div>
+                <div class="text-2xl text-gray-300">:</div>
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-masters-green" id="minutes">--</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Mins</div>
+                </div>
+                <div class="text-2xl text-gray-300">:</div>
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-masters-gold" id="seconds">--</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Secs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <nav class="mb-10">
-        <ul class="flex flex-wrap gap-3">
-            {% for link in agenda.get_nav_links_list() %}
-                <li><a href="{{ link.url }}" class="px-5 py-2 bg-green-600 text-white font-medium rounded-full hover:bg-green-700 transition duration-200 shadow-sm">{{ link.text }}</a></li>
-            {% endfor %}
-        </ul>
-    </nav>
+<!-- Stats Row -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="glass rounded-2xl p-6 card-hover border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Total Players</p>
+                <p class="text-3xl font-bold text-masters-green mt-1">{{ players|length }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center">
+                <i class="fas fa-users text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="glass rounded-2xl p-6 card-hover border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Avg Handicap</p>
+                <p class="text-3xl font-bold text-masters-green mt-1">
+                    {% if players %}{{ "%.1f"|format(players|map(attribute='handicap')|list|sum / players|length) }}{% else %}--{% endif %}
+                </p>
+            </div>
+            <div class="w-12 h-12 rounded-xl gold-gradient flex items-center justify-center">
+                <i class="fas fa-chart-line text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="glass rounded-2xl p-6 card-hover border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Courses</p>
+                <p class="text-3xl font-bold text-masters-green mt-1">{{ courses|length if courses is defined else 0 }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center">
+                <i class="fas fa-flag text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="glass rounded-2xl p-6 card-hover border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Rounds Played</p>
+                <p class="text-3xl font-bold text-masters-green mt-1">{{ rounds|length if rounds is defined else 0 }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl gold-gradient flex items-center justify-center">
+                <i class="fas fa-golf-ball text-white"></i>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <h2 class="text-3xl font-bold text-gray-800 mb-6">Players & Handicaps</h2>
-    {% if players %}
-        <ul class="space-y-3 mb-8">
-            {% for player in players %}
-                <li class="bg-gray-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
-                    <span class="text-lg font-medium">{{ player.name }} (Handicap: {{ player.handicap }})
-                        {% if player.team %}
-                            <span class="text-sm font-semibold ml-2 {% if player.team == agenda.get_team_names_list()[0] %}text-green-700{% elif player.team == agenda.get_team_names_list()[1] %}text-yellow-700{% else %}text-gray-500{% endif %}">[{{ player.team }}]{% endif %}
-                        {% if player.is_captain %}
-                            <span class="ml-1 text-yellow-500" title="Team Captain">👑</span>
-                        {% endif %}
-                    </span>
-                    <div class="flex items-center space-x-3">
-                        <a href="{{ url_for('edit_player', player_id=player.id) }}" class="text-blue-500 hover:underline text-sm">Edit</a>
-                        <a href="{{ url_for('add_travel_plan', player_id=player.id) }}" class="text-green-600 hover:underline text-sm">Add/Edit Travel Plan</a>
+<!-- Teams Section -->
+{% set team_names = agenda.get_team_names_list() %}
+{% if team_names|length >= 2 %}
+<div class="grid md:grid-cols-2 gap-6 mb-8">
+    <!-- Team 1 -->
+    <div class="glass rounded-2xl overflow-hidden border border-gray-100 card-hover">
+        <div class="gradient-bg px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white"></i>
                     </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="text-gray-600 mb-6">No players added yet. <a href="{{ url_for('add_player') }}">Add a player</a>.</p>
-    {% endif %}
-    <p><a href="{{ url_for('add_player') }}" class="btn-primary">Add New Player</a></p>
+                    <h3 class="text-white font-bold text-xl">{{ team_names[0] }}</h3>
+                </div>
+                <div class="text-white/80 text-sm">
+                    {{ players|selectattr('team', 'equalto', team_names[0])|list|length }} players
+                </div>
+            </div>
+        </div>
+        <div class="p-4">
+            {% set team1_players = players|selectattr('team', 'equalto', team_names[0])|list %}
+            {% if team1_players %}
+                <div class="space-y-2">
+                    {% for player in team1_players %}
+                    <div class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-all">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
+                                {{ player.name[0] }}
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">{{ player.name }}</span>
+                                {% if player.is_captain %}
+                                <span class="ml-2 text-masters-gold" title="Captain"><i class="fas fa-crown"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-500">HCP {{ player.handicap }}</span>
+                            <a href="{{ url_for('edit_player', player_id=player.id) }}" class="text-gray-400 hover:text-masters-green transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-400 text-center py-6">No players assigned yet</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Team 2 -->
+    <div class="glass rounded-2xl overflow-hidden border border-gray-100 card-hover">
+        <div class="gold-gradient px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white"></i>
+                    </div>
+                    <h3 class="text-white font-bold text-xl">{{ team_names[1] }}</h3>
+                </div>
+                <div class="text-white/80 text-sm">
+                    {{ players|selectattr('team', 'equalto', team_names[1])|list|length }} players
+                </div>
+            </div>
+        </div>
+        <div class="p-4">
+            {% set team2_players = players|selectattr('team', 'equalto', team_names[1])|list %}
+            {% if team2_players %}
+                <div class="space-y-2">
+                    {% for player in team2_players %}
+                    <div class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-all">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-white font-bold">
+                                {{ player.name[0] }}
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">{{ player.name }}</span>
+                                {% if player.is_captain %}
+                                <span class="ml-2 text-masters-gold" title="Captain"><i class="fas fa-crown"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-500">HCP {{ player.handicap }}</span>
+                            <a href="{{ url_for('edit_player', player_id=player.id) }}" class="text-gray-400 hover:text-masters-green transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-400 text-center py-6">No players assigned yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Unassigned Players -->
+{% set unassigned = players|rejectattr('team')|list %}
+{% if unassigned %}
+<div class="glass rounded-2xl p-6 border border-gray-100 mb-8">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-gray-800">
+            <i class="fas fa-user-clock mr-2 text-gray-400"></i>Unassigned Players
+        </h3>
+        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">{{ unassigned|length }} waiting</span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {% for player in unassigned %}
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                    {{ player.name[0] }}
+                </div>
+                <div>
+                    <span class="font-semibold text-gray-800">{{ player.name }}</span>
+                    <p class="text-xs text-gray-500">HCP {{ player.handicap }}</p>
+                </div>
+            </div>
+            <a href="{{ url_for('edit_player', player_id=player.id) }}" class="text-masters-green hover:text-masters-dark transition-colors">
+                <i class="fas fa-user-plus"></i>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="glass rounded-2xl p-6 border border-gray-100 mb-8">
+    <h3 class="text-xl font-bold text-gray-800 mb-6">
+        <i class="fas fa-bolt mr-2 text-masters-gold"></i>Quick Actions
+    </h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="{{ url_for('add_player') }}" class="flex flex-col items-center p-6 rounded-xl bg-gray-50 hover:bg-masters-green hover:text-white transition-all group">
+            <div class="w-14 h-14 rounded-full bg-masters-green/10 group-hover:bg-white/20 flex items-center justify-center mb-3 transition-all">
+                <i class="fas fa-user-plus text-2xl text-masters-green group-hover:text-white transition-colors"></i>
+            </div>
+            <span class="font-semibold text-center">Add Player</span>
+        </a>
+        
+        <a href="{{ url_for('travel') }}" class="flex flex-col items-center p-6 rounded-xl bg-gray-50 hover:bg-masters-green hover:text-white transition-all group">
+            <div class="w-14 h-14 rounded-full bg-masters-green/10 group-hover:bg-white/20 flex items-center justify-center mb-3 transition-all">
+                <i class="fas fa-plane text-2xl text-masters-green group-hover:text-white transition-colors"></i>
+            </div>
+            <span class="font-semibold text-center">Travel Plans</span>
+        </a>
+        
+        <a href="{{ url_for('rounds') }}" class="flex flex-col items-center p-6 rounded-xl bg-gray-50 hover:bg-masters-green hover:text-white transition-all group">
+            <div class="w-14 h-14 rounded-full bg-masters-green/10 group-hover:bg-white/20 flex items-center justify-center mb-3 transition-all">
+                <i class="fas fa-flag text-2xl text-masters-green group-hover:text-white transition-colors"></i>
+            </div>
+            <span class="font-semibold text-center">Log Round</span>
+        </a>
+        
+        <a href="{{ url_for('add_expense') }}" class="flex flex-col items-center p-6 rounded-xl bg-gray-50 hover:bg-masters-green hover:text-white transition-all group">
+            <div class="w-14 h-14 rounded-full bg-masters-green/10 group-hover:bg-white/20 flex items-center justify-center mb-3 transition-all">
+                <i class="fas fa-receipt text-2xl text-masters-green group-hover:text-white transition-colors"></i>
+            </div>
+            <span class="font-semibold text-center">Add Expense</span>
+        </a>
+    </div>
+</div>
+
+<!-- Message Section -->
+{% if agenda.message %}
+<div class="glass rounded-2xl p-6 border border-gray-100">
+    <div class="flex items-start space-x-4">
+        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-bullhorn text-white"></i>
+        </div>
+        <div>
+            <h3 class="font-bold text-gray-800 mb-2">From the Commissioner</h3>
+            <p class="text-gray-600 leading-relaxed">{{ agenda.message }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Countdown Timer
+    function updateCountdown() {
+        // Parse the trip dates - try to extract the start date
+        const datesStr = "{{ agenda.dates }}";
+        let targetDate;
+        
+        // Try common formats: "October 23-27, 2026" or "Oct 23, 2026"
+        const dateMatch = datesStr.match(/(\w+)\s+(\d+)(?:-\d+)?,?\s*(\d{4})/);
+        if (dateMatch) {
+            const [, month, day, year] = dateMatch;
+            targetDate = new Date(`${month} ${day}, ${year}`);
+        } else {
+            // Fallback: 90 days from now
+            targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + 90);
+        }
+        
+        const now = new Date();
+        const diff = targetDate - now;
+        
+        if (diff <= 0) {
+            document.getElementById('days').textContent = '🏌️';
+            document.getElementById('hours').textContent = 'IT\'S';
+            document.getElementById('minutes').textContent = 'GO';
+            document.getElementById('seconds').textContent = 'TIME!';
+            return;
+        }
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        document.getElementById('days').textContent = String(days).padStart(2, '0');
+        document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
 {% endblock %}
