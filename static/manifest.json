@@ -1,0 +1,17 @@
+{
+  "name": "Sire Cup",
+  "short_name": "Sire Cup",
+  "description": "Ryder Cup style golf trip management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#006747",
+  "theme_color": "#006747",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/sire_cup_logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}

@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Sire Cup - Your Ryder Cup style golf trip management app">
+    <meta name="theme-color" content="#006747">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sire Cup">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='sire_cup_logo.jpg') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <title>{% block title %}Sire Cup{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -280,7 +287,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-gray-200 mt-16">
+    <footer class="border-t border-gray-200 mt-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                 <div class="flex items-center space-x-3">
@@ -288,6 +295,11 @@
                         <i class="fas fa-golf-ball text-masters-gold text-sm"></i>
                     </div>
                     <span class="text-gray-600 font-medium">Sire Cup {{ now().year }}</span>
+                </div>
+                <div class="flex items-center space-x-6 text-sm text-gray-400">
+                    <a href="{{ url_for('settle_up') }}" class="hover:text-masters-green transition-colors">Settle Up</a>
+                    <a href="{{ url_for('schedule') }}" class="hover:text-masters-green transition-colors">Schedule</a>
+                    <a href="{{ url_for('announcements') }}" class="hover:text-masters-green transition-colors">News</a>
                 </div>
                 <p class="text-gray-400 text-sm">May your drives be straight and your putts be true. ⛳</p>
             </div>
