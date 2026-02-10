@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, Response
+import csv
+from io import StringIO
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import json
@@ -555,7 +557,39 @@ def delete_expense(expense_id):
     expense = Expense.query.get_or_404(expense_id)
     db.session.delete(expense)
     db.session.commit()
+    flash('Expense deleted', 'success')
     return redirect(url_for('expenses'))
+
+@app.route('/export_expenses')
+def export_expenses():
+    expenses = Expense.query.order_by(Expense.date.desc()).all()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(['Date', 'Description', 'Amount', 'Paid By', 'Split Between', 'Per Person', 'Notes'])
+    
+    # Data
+    for expense in expenses:
+        participants = ', '.join([p.player.name for p in expense.participants])
+        per_person = expense.amount / len(expense.participants) if expense.participants else expense.amount
+        writer.writerow([
+            expense.date.strftime('%Y-%m-%d'),
+            expense.description,
+            f'${expense.amount:.2f}',
+            expense.payer.name,
+            participants,
+            f'${per_person:.2f}',
+            expense.notes or ''
+        ])
+    
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=sire_cup_expenses.csv'}
+    )
 
 @app.route('/delete_player/<int:player_id>')
 def delete_player(player_id):

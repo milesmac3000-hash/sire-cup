@@ -39,8 +39,13 @@
                         <span class="font-bold text-masters-green">{{ t.to }}</span>
                     </div>
                 </div>
-                <div class="text-right">
+                <div class="flex items-center space-x-3">
                     <span class="text-2xl font-bold text-masters-green">${{ "%.2f"|format(t.amount) }}</span>
+                    <a href="https://venmo.com/?txn=pay&amount={{ t.amount }}&note=Sire%20Cup%20Expense" 
+                       target="_blank"
+                       class="px-3 py-1 bg-blue-100 hover:bg-blue-500 hover:text-white text-blue-600 rounded-lg text-sm font-medium transition-all">
+                        Venmo
+                    </a>
                 </div>
             </div>
             {% endfor %}
