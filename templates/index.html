@@ -71,6 +71,37 @@
     </div>
 </div>
 
+<!-- Team Standings Card -->
+{% set team_names = agenda.get_team_names_list() %}
+{% if matches|length > 0 or team1_points > 0 or team2_points > 0 %}
+<a href="{{ url_for('matches') }}" class="block glass rounded-2xl p-6 mb-8 border border-gray-100 card-hover">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-trophy text-masters-gold mr-2"></i>Team Standings
+        </h3>
+        <span class="text-masters-green text-sm font-medium">{{ matches|selectattr('status', 'equalto', 'completed')|list|length }} matches played →</span>
+    </div>
+    <div class="flex items-center justify-center space-x-8">
+        <div class="text-center">
+            <div class="text-4xl font-bold text-masters-green">{{ team1_points }}</div>
+            <p class="text-sm text-gray-500 mt-1">{{ team_names[0] if team_names|length > 0 else 'Team 1' }}</p>
+        </div>
+        <div class="text-2xl text-gray-300">-</div>
+        <div class="text-center">
+            <div class="text-4xl font-bold text-masters-gold">{{ team2_points }}</div>
+            <p class="text-sm text-gray-500 mt-1">{{ team_names[1] if team_names|length > 1 else 'Team 2' }}</p>
+        </div>
+    </div>
+    {% set total = team1_points + team2_points %}
+    {% if total > 0 %}
+    <div class="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden flex">
+        <div class="bg-masters-green h-full" style="width: {{ (team1_points / total * 100)|round }}%"></div>
+        <div class="bg-masters-gold h-full" style="width: {{ (team2_points / total * 100)|round }}%"></div>
+    </div>
+    {% endif %}
+</a>
+{% endif %}
+
 <!-- Stats Row -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="glass rounded-2xl p-6 card-hover border border-gray-100">
@@ -260,7 +291,14 @@
     <h3 class="text-xl font-bold text-gray-800 mb-6">
         <i class="fas fa-bolt mr-2 text-masters-gold"></i>Quick Actions
     </h3>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <a href="{{ url_for('create_match') }}" class="flex flex-col items-center p-6 rounded-xl bg-gray-50 hover:bg-masters-gold hover:text-white transition-all group">
+            <div class="w-14 h-14 rounded-full bg-masters-gold/10 group-hover:bg-white/20 flex items-center justify-center mb-3 transition-all">
+                <i class="fas fa-trophy text-2xl text-masters-gold group-hover:text-white transition-colors"></i>
+            </div>
+            <span class="font-semibold text-center">New Match</span>
+        </a>
+        
         <a href="{{ url_for('add_player') }}" class="flex flex-col items-center p-6 rounded-xl bg-gray-50 hover:bg-masters-green hover:text-white transition-all group">
             <div class="w-14 h-14 rounded-full bg-masters-green/10 group-hover:bg-white/20 flex items-center justify-center mb-3 transition-all">
                 <i class="fas fa-user-plus text-2xl text-masters-green group-hover:text-white transition-colors"></i>
@@ -290,6 +328,34 @@
         </a>
     </div>
 </div>
+
+<!-- Recent Announcements -->
+{% if announcements %}
+<div class="glass rounded-2xl p-6 border border-gray-100 mb-8">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-gray-800">
+            <i class="fas fa-bullhorn mr-2 text-masters-green"></i>Latest News
+        </h3>
+        <a href="{{ url_for('announcements') }}" class="text-masters-green hover:text-masters-dark font-medium text-sm">
+            View All →
+        </a>
+    </div>
+    <div class="space-y-4">
+        {% for announcement in announcements %}
+        <div class="p-4 bg-gray-50 rounded-xl {% if announcement.pinned %}border-l-4 border-masters-gold{% endif %}">
+            <div class="flex items-center space-x-2 mb-1">
+                {% if announcement.pinned %}
+                <span class="text-masters-gold text-xs"><i class="fas fa-thumbtack"></i></span>
+                {% endif %}
+                <h4 class="font-bold text-gray-800">{{ announcement.title }}</h4>
+            </div>
+            <p class="text-gray-600 text-sm line-clamp-2">{{ announcement.content[:150] }}{% if announcement.content|length > 150 %}...{% endif %}</p>
+            <p class="text-gray-400 text-xs mt-2">{{ announcement.created_at.strftime('%b %d') }}{% if announcement.author %} • {{ announcement.author }}{% endif %}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <!-- Message Section -->
 {% if agenda.message %}

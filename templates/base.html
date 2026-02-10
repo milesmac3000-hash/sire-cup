@@ -190,6 +190,9 @@
                     <a href="{{ url_for('index') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
                         <i class="fas fa-home mr-2"></i>Home
                     </a>
+                    <a href="{{ url_for('matches') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
+                        <i class="fas fa-trophy mr-2"></i>Matches
+                    </a>
                     <a href="{{ url_for('travel') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
                         <i class="fas fa-plane mr-2"></i>Travel
                     </a>
@@ -199,8 +202,8 @@
                     <a href="{{ url_for('expenses') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
                         <i class="fas fa-receipt mr-2"></i>Expenses
                     </a>
-                    <a href="{{ url_for('settle_up') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
-                        <i class="fas fa-handshake mr-2"></i>Settle Up
+                    <a href="{{ url_for('announcements') }}" class="nav-item px-4 py-2 text-white/90 hover:text-white font-medium text-sm">
+                        <i class="fas fa-bullhorn mr-2"></i>News
                     </a>
                 </div>
                 
@@ -216,6 +219,9 @@
             <div class="px-4 py-3 space-y-2">
                 <a href="{{ url_for('index') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
                     <i class="fas fa-home mr-3 w-5"></i>Home
+                </a>
+                <a href="{{ url_for('matches') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
+                    <i class="fas fa-trophy mr-3 w-5"></i>Matches
                 </a>
                 <a href="{{ url_for('travel') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
                     <i class="fas fa-plane mr-3 w-5"></i>Travel
@@ -234,6 +240,9 @@
                 </a>
                 <a href="{{ url_for('settle_up') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
                     <i class="fas fa-handshake mr-3 w-5"></i>Settle Up
+                </a>
+                <a href="{{ url_for('announcements') }}" class="block px-4 py-3 text-white/90 hover:bg-white/10 rounded-lg transition-all">
+                    <i class="fas fa-bullhorn mr-3 w-5"></i>Announcements
                 </a>
             </div>
         </div>

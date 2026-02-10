@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Matches | Sire Cup{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div>
+        <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-trophy text-masters-gold mr-3"></i>Matches
+        </h1>
+        <p class="text-gray-500">Ryder Cup style competition tracking</p>
+    </div>
+    <a href="{{ url_for('create_match') }}" class="mt-4 md:mt-0 btn-primary px-6 py-3 rounded-xl text-white font-semibold flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Create Match</span>
+    </a>
+</div>
+
+<!-- Team Standings -->
+<div class="gradient-bg rounded-2xl p-8 mb-8 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-5 right-5 w-32 h-32 rounded-full border-2 border-white"></div>
+        <div class="absolute bottom-5 left-5 w-24 h-24 rounded-full border-2 border-white"></div>
+    </div>
+    <div class="relative z-10">
+        <h2 class="text-white/80 text-sm font-semibold uppercase tracking-wide mb-6 text-center">Team Standings</h2>
+        <div class="flex items-center justify-center space-x-8 md:space-x-16">
+            <div class="text-center">
+                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
+                    <span class="text-3xl md:text-4xl font-bold text-white">{{ team1_points }}</span>
+                </div>
+                <p class="text-white font-bold text-lg">{{ team_names[0] if team_names|length > 0 else 'Team 1' }}</p>
+            </div>
+            <div class="text-white/60 text-4xl font-light">vs</div>
+            <div class="text-center">
+                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
+                    <span class="text-3xl md:text-4xl font-bold text-masters-gold">{{ team2_points }}</span>
+                </div>
+                <p class="text-masters-gold font-bold text-lg">{{ team_names[1] if team_names|length > 1 else 'Team 2' }}</p>
+            </div>
+        </div>
+        {% set total_points = team1_points + team2_points %}
+        {% if total_points > 0 %}
+        <div class="mt-6 max-w-md mx-auto">
+            <div class="h-3 bg-white/20 rounded-full overflow-hidden flex">
+                <div class="bg-white h-full transition-all" style="width: {{ (team1_points / total_points * 100)|round }}%"></div>
+                <div class="bg-masters-gold h-full transition-all" style="width: {{ (team2_points / total_points * 100)|round }}%"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Match Format Legend -->
+<div class="glass rounded-2xl p-4 mb-6 border border-gray-100">
+    <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
+        <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Singles</span>
+        <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>Four-Ball</span>
+        <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-orange-500 mr-2"></span>Foursomes</span>
+        <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>Scramble</span>
+    </div>
+</div>
+
+<!-- Matches List -->
+{% if matches %}
+<div class="space-y-4">
+    {% for match in matches %}
+    <div class="glass rounded-2xl border border-gray-100 overflow-hidden card-hover">
+        <div class="p-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <span class="px-3 py-1 rounded-full text-white text-xs font-bold uppercase
+                        {% if match.format == 'singles' %}bg-blue-500
+                        {% elif match.format == 'fourball' %}bg-purple-500
+                        {% elif match.format == 'foursomes' %}bg-orange-500
+                        {% else %}bg-green-500{% endif %}">
+                        {{ match.format|replace('_', ' ')|title }}
+                    </span>
+                    <span class="text-gray-500 text-sm">{{ match.date.strftime('%b %d, %Y') }}</span>
+                    {% if match.status == 'completed' %}
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Completed</span>
+                    {% elif match.status == 'in_progress' %}
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold animate-pulse">In Progress</span>
+                    {% else %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Scheduled</span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('edit_match', match_id=match.id) }}" class="mt-2 md:mt-0 text-gray-400 hover:text-masters-green transition-colors">
+                    <i class="fas fa-edit"></i>
+                </a>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <!-- Team 1 -->
+                <div class="flex-1">
+                    <div class="flex flex-wrap gap-2 justify-start">
+                        {% for player_id in match.get_team1_players() %}
+                        {% if player_id in players_dict %}
+                        <div class="flex items-center space-x-2 bg-masters-green/10 px-3 py-2 rounded-lg">
+                            <div class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white font-bold text-sm">
+                                {{ players_dict[player_id].name[0] }}
+                            </div>
+                            <span class="font-medium text-gray-800">{{ players_dict[player_id].name }}</span>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Result -->
+                <div class="px-6 text-center">
+                    {% if match.status == 'completed' %}
+                    <div class="text-2xl font-bold">
+                        <span class="{% if match.team1_points > match.team2_points %}text-masters-green{% elif match.team1_points < match.team2_points %}text-gray-400{% else %}text-gray-600{% endif %}">{{ match.team1_points|int if match.team1_points == match.team1_points|int else match.team1_points }}</span>
+                        <span class="text-gray-300 mx-2">-</span>
+                        <span class="{% if match.team2_points > match.team1_points %}text-masters-gold{% elif match.team2_points < match.team1_points %}text-gray-400{% else %}text-gray-600{% endif %}">{{ match.team2_points|int if match.team2_points == match.team2_points|int else match.team2_points }}</span>
+                    </div>
+                    {% if match.result_description %}
+                    <p class="text-sm text-gray-500 mt-1">{{ match.result_description }}</p>
+                    {% endif %}
+                    {% else %}
+                    <span class="text-gray-400 text-lg">vs</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Team 2 -->
+                <div class="flex-1">
+                    <div class="flex flex-wrap gap-2 justify-end">
+                        {% for player_id in match.get_team2_players() %}
+                        {% if player_id in players_dict %}
+                        <div class="flex items-center space-x-2 bg-masters-gold/10 px-3 py-2 rounded-lg">
+                            <div class="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-white font-bold text-sm">
+                                {{ players_dict[player_id].name[0] }}
+                            </div>
+                            <span class="font-medium text-gray-800">{{ players_dict[player_id].name }}</span>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if match.notes %}
+            <p class="mt-4 text-gray-500 text-sm italic">{{ match.notes }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass rounded-2xl p-12 border border-gray-100 text-center">
+    <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-trophy text-4xl text-gray-300"></i>
+    </div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">No Matches Yet</h3>
+    <p class="text-gray-500 mb-6">Create your first match to start tracking the competition</p>
+    <a href="{{ url_for('create_match') }}" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold inline-flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Create First Match</span>
+    </a>
+</div>
+{% endif %}
+{% endblock %}

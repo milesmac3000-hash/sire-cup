@@ -126,6 +126,44 @@ class ExpenseParticipant(db.Model):
     def __repr__(self):
         return f'<Participant {self.player.name} in Expense {self.expense.description}>'
 
+class Match(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    round_id = db.Column(db.Integer, db.ForeignKey('round.id'), nullable=True)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    format = db.Column(db.String(50), nullable=False)  # singles, fourball, foursomes, scramble
+    status = db.Column(db.String(20), nullable=False, default='scheduled')  # scheduled, in_progress, completed
+    
+    # Team 1 players (JSON list of player IDs)
+    team1_player_ids = db.Column(db.Text, nullable=False)
+    # Team 2 players (JSON list of player IDs)
+    team2_player_ids = db.Column(db.Text, nullable=False)
+    
+    # Results
+    team1_points = db.Column(db.Float, nullable=True)  # 0, 0.5, or 1 (for ties/halves)
+    team2_points = db.Column(db.Float, nullable=True)
+    result_description = db.Column(db.String(100), nullable=True)  # e.g., "3&2", "1 up", "A/S"
+    notes = db.Column(db.Text, nullable=True)
+
+    def get_team1_players(self):
+        return json.loads(self.team1_player_ids)
+    
+    def get_team2_players(self):
+        return json.loads(self.team2_player_ids)
+
+    def __repr__(self):
+        return f'<Match {self.format} on {self.date}>'
+
+class Announcement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    author = db.Column(db.String(100), nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    pinned = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f'<Announcement {self.title}>'
+
 class TripInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False, default="Sire Cup 2026 - Annual Golf Extravaganza")
@@ -181,7 +219,24 @@ def index():
     players = Player.query.all()
     courses = Course.query.all()
     rounds = Round.query.all()
-    return render_template('index.html', players=players, agenda=trip_info, courses=courses, rounds=rounds)
+    
+    # Get match standings
+    matches_list = Match.query.all()
+    team1_points = sum(m.team1_points or 0 for m in matches_list if m.status == 'completed')
+    team2_points = sum(m.team2_points or 0 for m in matches_list if m.status == 'completed')
+    
+    # Get recent announcements
+    recent_announcements = Announcement.query.order_by(Announcement.pinned.desc(), Announcement.created_at.desc()).limit(3).all()
+    
+    return render_template('index.html', 
+                          players=players, 
+                          agenda=trip_info, 
+                          courses=courses, 
+                          rounds=rounds,
+                          matches=matches_list,
+                          team1_points=team1_points,
+                          team2_points=team2_points,
+                          announcements=recent_announcements)
 
 @app.route('/edit_trip_info', methods=['GET', 'POST'])
 def edit_trip_info():
@@ -544,6 +599,170 @@ def settle_up():
             j += 1
 
     return render_template('settle_up.html', players=players, expenses=expenses, balances=balances, transactions=transactions)
+
+
+# --- Match/Competition Routes ---
+@app.route('/matches')
+def matches():
+    matches_list = Match.query.order_by(Match.date.desc()).all()
+    players = Player.query.all()
+    players_dict = {p.id: p for p in players}
+    trip_info = get_or_create_trip_info()
+    team_names = trip_info.get_team_names_list()
+    
+    # Calculate team standings
+    team1_points = sum(m.team1_points or 0 for m in matches_list if m.status == 'completed')
+    team2_points = sum(m.team2_points or 0 for m in matches_list if m.status == 'completed')
+    
+    return render_template('matches.html', 
+                          matches=matches_list, 
+                          players=players,
+                          players_dict=players_dict,
+                          team_names=team_names,
+                          team1_points=team1_points,
+                          team2_points=team2_points)
+
+@app.route('/create_match', methods=['GET', 'POST'])
+def create_match():
+    trip_info = get_or_create_trip_info()
+    team_names = trip_info.get_team_names_list()
+    players = Player.query.all()
+    
+    # Split players by team
+    team1_players = [p for p in players if p.team == team_names[0]] if len(team_names) > 0 else []
+    team2_players = [p for p in players if p.team == team_names[1]] if len(team_names) > 1 else []
+    
+    if request.method == 'POST':
+        format_type = request.form['format']
+        match_date = datetime.strptime(request.form['date'], '%Y-%m-%d')
+        team1_ids = request.form.getlist('team1_players')
+        team2_ids = request.form.getlist('team2_players')
+        notes = request.form.get('notes', '')
+        
+        new_match = Match(
+            format=format_type,
+            date=match_date,
+            team1_player_ids=json.dumps([int(id) for id in team1_ids]),
+            team2_player_ids=json.dumps([int(id) for id in team2_ids]),
+            notes=notes,
+            status='scheduled'
+        )
+        db.session.add(new_match)
+        db.session.commit()
+        return redirect(url_for('matches'))
+    
+    return render_template('create_match.html', 
+                          team_names=team_names,
+                          team1_players=team1_players,
+                          team2_players=team2_players)
+
+@app.route('/edit_match/<int:match_id>', methods=['GET', 'POST'])
+def edit_match(match_id):
+    match = Match.query.get_or_404(match_id)
+    trip_info = get_or_create_trip_info()
+    team_names = trip_info.get_team_names_list()
+    players = Player.query.all()
+    
+    team1_players = [p for p in players if p.team == team_names[0]] if len(team_names) > 0 else []
+    team2_players = [p for p in players if p.team == team_names[1]] if len(team_names) > 1 else []
+    
+    if request.method == 'POST':
+        match.format = request.form['format']
+        match.date = datetime.strptime(request.form['date'], '%Y-%m-%d')
+        match.team1_player_ids = json.dumps([int(id) for id in request.form.getlist('team1_players')])
+        match.team2_player_ids = json.dumps([int(id) for id in request.form.getlist('team2_players')])
+        match.status = request.form['status']
+        match.notes = request.form.get('notes', '')
+        
+        # Handle results if completed
+        if match.status == 'completed':
+            result = request.form.get('result')
+            match.result_description = request.form.get('result_description', '')
+            if result == 'team1':
+                match.team1_points = 1.0
+                match.team2_points = 0.0
+            elif result == 'team2':
+                match.team1_points = 0.0
+                match.team2_points = 1.0
+            elif result == 'halved':
+                match.team1_points = 0.5
+                match.team2_points = 0.5
+        
+        db.session.commit()
+        return redirect(url_for('matches'))
+    
+    return render_template('edit_match.html', 
+                          match=match,
+                          team_names=team_names,
+                          team1_players=team1_players,
+                          team2_players=team2_players,
+                          current_team1_ids=match.get_team1_players(),
+                          current_team2_ids=match.get_team2_players())
+
+@app.route('/delete_match/<int:match_id>')
+def delete_match(match_id):
+    match = Match.query.get_or_404(match_id)
+    db.session.delete(match)
+    db.session.commit()
+    return redirect(url_for('matches'))
+
+
+# --- Announcement Routes ---
+@app.route('/announcements')
+def announcements():
+    announcements_list = Announcement.query.order_by(Announcement.pinned.desc(), Announcement.created_at.desc()).all()
+    return render_template('announcements.html', announcements=announcements_list)
+
+@app.route('/create_announcement', methods=['GET', 'POST'])
+def create_announcement():
+    if request.method == 'POST':
+        title = request.form['title']
+        content = request.form['content']
+        author = request.form.get('author', '')
+        pinned = bool(request.form.get('pinned'))
+        
+        new_announcement = Announcement(title=title, content=content, author=author, pinned=pinned)
+        db.session.add(new_announcement)
+        db.session.commit()
+        return redirect(url_for('announcements'))
+    
+    return render_template('create_announcement.html')
+
+@app.route('/edit_announcement/<int:announcement_id>', methods=['GET', 'POST'])
+def edit_announcement(announcement_id):
+    announcement = Announcement.query.get_or_404(announcement_id)
+    if request.method == 'POST':
+        announcement.title = request.form['title']
+        announcement.content = request.form['content']
+        announcement.author = request.form.get('author', '')
+        announcement.pinned = bool(request.form.get('pinned'))
+        db.session.commit()
+        return redirect(url_for('announcements'))
+    return render_template('edit_announcement.html', announcement=announcement)
+
+@app.route('/delete_announcement/<int:announcement_id>')
+def delete_announcement(announcement_id):
+    announcement = Announcement.query.get_or_404(announcement_id)
+    db.session.delete(announcement)
+    db.session.commit()
+    return redirect(url_for('announcements'))
+
+
+# --- API endpoint for standings ---
+@app.route('/api/standings')
+def api_standings():
+    matches_list = Match.query.filter_by(status='completed').all()
+    trip_info = get_or_create_trip_info()
+    team_names = trip_info.get_team_names_list()
+    
+    team1_points = sum(m.team1_points or 0 for m in matches_list)
+    team2_points = sum(m.team2_points or 0 for m in matches_list)
+    
+    return jsonify({
+        'team1': {'name': team_names[0] if len(team_names) > 0 else 'Team 1', 'points': team1_points},
+        'team2': {'name': team_names[1] if len(team_names) > 1 else 'Team 2', 'points': team2_points},
+        'matches_played': len(matches_list)
+    })
 
 
 if __name__ == '__main__':
