@@ -147,6 +147,13 @@ class TripInfo(db.Model):
 # Create tables automatically on startup
 with app.app_context():
     db.create_all()
+    # Add departure_time column if it doesn't exist (migration)
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text("ALTER TABLE travel_plan ADD COLUMN departure_time VARCHAR(50)"))
+            conn.commit()
+    except Exception:
+        pass  # Column already exists
 
 # Helper to get/create trip info
 def get_or_create_trip_info():
