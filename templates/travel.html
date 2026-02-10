@@ -25,7 +25,7 @@
         {% for plan in travel_plans %}
         <div class="p-6 hover:bg-gray-50 transition-all">
             <div class="flex flex-col md:flex-row md:items-center justify-between">
-                <div class="flex items-start space-x-4">
+                <div class="flex items-start space-x-4 flex-1">
                     <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold flex-shrink-0">
                         {{ plan.player.name[0] }}
                     </div>
@@ -38,7 +38,7 @@
                             </span>
                             <span class="flex items-center">
                                 <i class="fas fa-plane-departure text-masters-gold mr-2"></i>
-                                {{ plan.departure_date.strftime('%b %d') }}
+                                {{ plan.departure_date.strftime('%b %d') }}{% if plan.departure_time %} at {{ plan.departure_time }}{% endif %}
                             </span>
                         </div>
                         {% if plan.airport_name or plan.flight_number %}
@@ -60,6 +60,10 @@
                         {% endif %}
                     </div>
                 </div>
+                <a href="{{ url_for('edit_travel_plan', plan_id=plan.id) }}" class="mt-4 md:mt-0 px-4 py-2 bg-gray-100 hover:bg-masters-green hover:text-white rounded-xl transition-all text-gray-600 font-medium flex items-center space-x-2">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit</span>
+                </a>
             </div>
         </div>
         {% endfor %}

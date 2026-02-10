@@ -43,6 +43,7 @@ class TravelPlan(db.Model):
     airport_name = db.Column(db.String(100), nullable=True)
     flight_number = db.Column(db.String(50), nullable=True)
     departure_date = db.Column(db.DateTime, nullable=False)
+    departure_time = db.Column(db.String(50), nullable=True)
     notes = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
@@ -235,6 +236,7 @@ def add_travel_plan(player_id):
         airport_name = request.form['airport_name']
         flight_number = request.form['flight_number']
         departure_str = request.form['departure_date']
+        departure_time = request.form.get('departure_time', '')
         notes = request.form['notes']
 
         arrival_date = datetime.strptime(arrival_str, '%Y-%m-%d')
@@ -247,12 +249,35 @@ def add_travel_plan(player_id):
             airport_name=airport_name,
             flight_number=flight_number,
             departure_date=departure_date,
+            departure_time=departure_time,
             notes=notes
         )
         db.session.add(new_plan)
         db.session.commit()
         return redirect(url_for('travel'))
     return render_template('add_travel_plan.html', player=player)
+
+@app.route('/edit_travel_plan/<int:plan_id>', methods=['GET', 'POST'])
+def edit_travel_plan(plan_id):
+    plan = TravelPlan.query.get_or_404(plan_id)
+    if request.method == 'POST':
+        plan.arrival_date = datetime.strptime(request.form['arrival_date'], '%Y-%m-%d')
+        plan.arrival_time = request.form['arrival_time']
+        plan.airport_name = request.form['airport_name']
+        plan.flight_number = request.form['flight_number']
+        plan.departure_date = datetime.strptime(request.form['departure_date'], '%Y-%m-%d')
+        plan.departure_time = request.form.get('departure_time', '')
+        plan.notes = request.form['notes']
+        db.session.commit()
+        return redirect(url_for('travel'))
+    return render_template('edit_travel_plan.html', plan=plan)
+
+@app.route('/delete_travel_plan/<int:plan_id>')
+def delete_travel_plan(plan_id):
+    plan = TravelPlan.query.get_or_404(plan_id)
+    db.session.delete(plan)
+    db.session.commit()
+    return redirect(url_for('travel'))
 
 # --- Carpool Routes ---
 @app.route('/carpools')
@@ -316,6 +341,31 @@ def add_course():
         db.session.commit()
         return redirect(url_for('courses'))
     return render_template('add_course.html')
+
+@app.route('/edit_course/<int:course_id>', methods=['GET', 'POST'])
+def edit_course(course_id):
+    course = Course.query.get_or_404(course_id)
+    if request.method == 'POST':
+        name = request.form['name']
+        pars_str = request.form['pars']
+        try:
+            pars_list = [int(p.strip()) for p in pars_str.split(',') if p.strip()]
+            if len(pars_list) != 18:
+                raise ValueError("Please enter 18 pars, comma-separated.")
+            course.name = name
+            course.pars = json.dumps(pars_list)
+            db.session.commit()
+            return redirect(url_for('courses'))
+        except (ValueError, json.JSONDecodeError) as e:
+            return render_template('edit_course.html', course=course, error=str(e))
+    return render_template('edit_course.html', course=course)
+
+@app.route('/delete_course/<int:course_id>')
+def delete_course(course_id):
+    course = Course.query.get_or_404(course_id)
+    db.session.delete(course)
+    db.session.commit()
+    return redirect(url_for('courses'))
 
 @app.route('/rounds')
 def rounds():
@@ -397,6 +447,43 @@ def add_expense():
         db.session.commit()
         return redirect(url_for('expenses'))
     return render_template('add_expense.html', players=players)
+
+@app.route('/edit_expense/<int:expense_id>', methods=['GET', 'POST'])
+def edit_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    players = Player.query.all()
+    if request.method == 'POST':
+        expense.description = request.form['description']
+        expense.amount = float(request.form['amount'])
+        expense.payer_id = int(request.form['payer_id'])
+        expense.notes = request.form.get('notes')
+        
+        # Update participants
+        ExpenseParticipant.query.filter_by(expense_id=expense.id).delete()
+        participant_ids = request.form.getlist('participants')
+        for pid in participant_ids:
+            participant = ExpenseParticipant(expense_id=expense.id, player_id=int(pid))
+            db.session.add(participant)
+        
+        db.session.commit()
+        return redirect(url_for('expenses'))
+    
+    current_participant_ids = [p.player_id for p in expense.participants]
+    return render_template('edit_expense.html', expense=expense, players=players, current_participant_ids=current_participant_ids)
+
+@app.route('/delete_expense/<int:expense_id>')
+def delete_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    db.session.delete(expense)
+    db.session.commit()
+    return redirect(url_for('expenses'))
+
+@app.route('/delete_player/<int:player_id>')
+def delete_player(player_id):
+    player = Player.query.get_or_404(player_id)
+    db.session.delete(player)
+    db.session.commit()
+    return redirect(url_for('index'))
 
 @app.route('/settle_up')
 def settle_up():

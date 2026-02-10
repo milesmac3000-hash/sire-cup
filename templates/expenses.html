@@ -79,11 +79,16 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="mt-4 md:mt-0 text-right">
-                    <p class="text-2xl font-bold text-masters-green">${{ "%.2f"|format(expense.amount) }}</p>
-                    {% if expense.participants %}
-                    <p class="text-sm text-gray-500">${{ "%.2f"|format(expense.amount / expense.participants|length) }} each</p>
-                    {% endif %}
+                <div class="mt-4 md:mt-0 flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-masters-green">${{ "%.2f"|format(expense.amount) }}</p>
+                        {% if expense.participants %}
+                        <p class="text-sm text-gray-500">${{ "%.2f"|format(expense.amount / expense.participants|length) }} each</p>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('edit_expense', expense_id=expense.id) }}" class="px-3 py-2 bg-gray-100 hover:bg-masters-green hover:text-white rounded-lg transition-all" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
                 </div>
             </div>
         </div>
