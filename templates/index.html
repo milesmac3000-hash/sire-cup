@@ -312,20 +312,8 @@
 <script>
     // Countdown Timer
     function updateCountdown() {
-        // Parse the trip dates - try to extract the start date
-        const datesStr = "{{ agenda.dates }}";
-        let targetDate;
-        
-        // Try common formats: "October 23-27, 2026" or "Oct 23, 2026"
-        const dateMatch = datesStr.match(/(\w+)\s+(\d+)(?:-\d+)?,?\s*(\d{4})/);
-        if (dateMatch) {
-            const [, month, day, year] = dateMatch;
-            targetDate = new Date(`${month} ${day}, ${year}`);
-        } else {
-            // Fallback: 90 days from now
-            targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + 90);
-        }
+        // Trip starts August 19, 2026
+        const targetDate = new Date('August 19, 2026');
         
         const now = new Date();
         const diff = targetDate - now;
