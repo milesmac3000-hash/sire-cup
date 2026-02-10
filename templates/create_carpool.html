@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Create Carpool Group - Sire Cup{% endblock %}
+
+{% block content %}
+    <h1 class="mb-8">Create New Carpool Group</h1>
+    <form method="POST" action="{{ url_for('create_carpool') }}" class="space-y-6">
+        <div>
+            <label for="name" class="block text-lg font-medium text-gray-700 mb-1">Group Name:</label>
+            <input type="text" id="name" name="name" required
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="description" class="block text-lg font-medium text-gray-700 mb-1">Description (e.g., Driver, Airport, Time):</label>
+            <textarea id="description" name="description" rows="4"
+                      class="form-input"></textarea>
+        </div>
+
+        <div>
+            <label for="max_members" class="block text-lg font-medium text-gray-700 mb-1">Maximum Members (Optional):</label>
+            <input type="number" id="max_members" name="max_members" min="1"
+                   class="form-input">
+        </div>
+
+        <div>
+            <button type="submit" class="btn-primary">
+                Create Carpool
+            </button>
+        </div>
+    </form>
+    <p class="mt-8"><a href="{{ url_for('carpools') }}">Back to Carpools</a></p>
+{% endblock %}

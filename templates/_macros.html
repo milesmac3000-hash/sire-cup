@@ -1,0 +1,7 @@
+{% macro render_field(field, label_text=None, input_type='text', placeholder=None) %}
+    <div>
+        <label for="{{ field.name }}" class="block text-lg font-medium text-gray-700 mb-1">{{ label_text if label_text else field.label }}:</label>
+        <input type="{{ input_type }}" id="{{ field.name }}" name="{{ field.name }}" value="{{ field.data if field.data else '' }}" {% if field.required %}required{% endif %} {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+               class="form-input">
+    </div>
+{% endmacro %}

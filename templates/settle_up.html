@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Settle Up - Sire Cup{% endblock %}
+
+{% block content %}
+    <h1 class="text-4xl font-bold text-blue-700 mb-6">Settle Up</h1>
+    <p class="mb-6"><a href="{{ url_for('index') }}" class="text-blue-500 hover:underline">Back to Dashboard</a></p>
+
+    <h2 class="text-3xl font-bold text-gray-800 mb-4">Balances Overview</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {% for player in players %}
+            <div class="bg-gray-100 p-4 rounded-lg shadow-sm">
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ player.name }}</h3>
+                {% set balance = balances[player.id] %}
+                <p class="text-lg {% if balance < 0 %}text-red-600{% elif balance > 0 %}text-green-600{% else %}text-gray-700{% endif %}">
+                    {% if balance < 0 %}
+                        Owes: ${{ "%.2f"|format(balance|abs) }}
+                    {% elif balance > 0 %}
+                        Is Owed: ${{ "%.2f"|format(balance) }}
+                    {% else %}
+                        Settled
+                    {% endif %}
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="text-3xl font-bold text-gray-800 mb-4">Suggested Transactions</h2>
+    {% if transactions %}
+        <ul class="space-y-3">
+            {% for transaction in transactions %}
+                <li class="bg-blue-50 p-3 rounded-md shadow-sm text-lg">
+                    <span class="font-semibold">{{ transaction.from }}</span> pays <span class="font-semibold">{{ transaction.to }}</span> <span class="font-bold text-green-700">${{ "%.2f"|format(transaction.amount) }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-600">Everyone is settled up, or no expenses recorded yet!</p>
+    {% endif %}
+
+    <h2 class="text-3xl font-bold text-gray-800 mt-8 mb-4">All Expenses (for reference)</h2>
+    {% if expenses %}
+        <ul class="space-y-4">
+            {% for expense in expenses %}
+                <li class="bg-gray-100 p-4 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ expense.description }} - ${{ "%.2f"|format(expense.amount) }}</h3>
+                    <p class="text-gray-700">Paid by: <span class="font-medium">{{ expense.payer.name }}</span> on {{ expense.date.strftime('%Y-%m-%d %H:%M') }}</p>
+                    {% if expense.notes %}
+                        <p class="text-gray-600 italic">Notes: {{ expense.notes }}</p>
+                    {% endif %}
+                    <p class="text-gray-700 mt-2">Participants:
+                        {% if expense.participants %}
+                            {% for participant in expense.participants %}
+                                <span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2">{{ participant.player.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            None
+                        {% endif %}
+                    </p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-600">No expenses recorded yet.</p>
+    {% endif %}
+{% endblock %}

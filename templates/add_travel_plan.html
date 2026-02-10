@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Add Travel Plan for {{ player.name }} - Sire Cup{% endblock %}
+
+{% block content %}
+    <h1 class="mb-8">Add Travel Plan for <span class="text-yellow-600">{{ player.name }}</span></h1>
+    <form method="POST" action="{{ url_for('add_travel_plan', player_id=player.id) }}" class="space-y-6">
+        <div>
+            <label for="arrival_date" class="block text-lg font-medium text-gray-700 mb-1">Arrival Date:</label>
+            <input type="date" id="arrival_date" name="arrival_date" required
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="arrival_time" class="block text-lg font-medium text-gray-700 mb-1">Arrival Time (e.g., 2:30 PM, afternoon):</label>
+            <input type="text" id="arrival_time" name="arrival_time"
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="airport_name" class="block text-lg font-medium text-gray-700 mb-1">Airport Name (e.g., SDF, Louisville International):</label>
+            <input type="text" id="airport_name" name="airport_name"
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="flight_number" class="block text-lg font-medium text-gray-700 mb-1">Flight Number (Optional):</label>
+            <input type="text" id="flight_number" name="flight_number"
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="departure_date" class="block text-lg font-medium text-gray-700 mb-1">Departure Date:</label>
+            <input type="date" id="departure_date" name="departure_date" required
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="notes" class="block text-lg font-medium text-gray-700 mb-1">Notes (e.g., hotel details):</label>
+            <textarea id="notes" name="notes" rows="4"
+                      class="form-input"></textarea>
+        </div>
+
+        <div>
+            <button type="submit" class="btn-primary">
+                Save Travel Plan
+            </button>
+        </div>
+    </form>
+    <p class="mt-8"><a href="{{ url_for('travel') }}">Back to Travel Plans</a></p>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field %}
+
+{% block title %}{{ agenda.title }}{% endblock %}
+
+{% block content %}
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-4xl font-extrabold text-green-800">{{ agenda.title }}</h1>
+        <a href="{{ url_for('edit_trip_info') }}" class="px-3 py-1 text-sm bg-yellow-600 text-white font-semibold rounded-md shadow-sm hover:bg-yellow-700 transition duration-200">Edit Trip Info</a>
+    </div>
+    <p class="text-lg mb-2"><strong class="font-semibold">Dates:</strong> {{ agenda.dates }}</p>
+    <p class="text-lg mb-4"><strong class="font-semibold">Location:</b> {{ agenda.location }}</p>
+    <p class="text-gray-700 mb-8">{{ agenda.message }}</p>
+
+    <nav class="mb-10">
+        <ul class="flex flex-wrap gap-3">
+            {% for link in agenda.get_nav_links_list() %}
+                <li><a href="{{ link.url }}" class="px-5 py-2 bg-green-600 text-white font-medium rounded-full hover:bg-green-700 transition duration-200 shadow-sm">{{ link.text }}</a></li>
+            {% endfor %}
+        </ul>
+    </nav>
+
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Players & Handicaps</h2>
+    {% if players %}
+        <ul class="space-y-3 mb-8">
+            {% for player in players %}
+                <li class="bg-gray-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
+                    <span class="text-lg font-medium">{{ player.name }} (Handicap: {{ player.handicap }})
+                        {% if player.team %}
+                            <span class="text-sm font-semibold ml-2 {% if player.team == agenda.get_team_names_list()[0] %}text-green-700{% elif player.team == agenda.get_team_names_list()[1] %}text-yellow-700{% else %}text-gray-500{% endif %}">[{{ player.team }}]{% endif %}
+                        {% if player.is_captain %}
+                            <span class="ml-1 text-yellow-500" title="Team Captain">👑</span>
+                        {% endif %}
+                    </span>
+                    <div class="flex items-center space-x-3">
+                        <a href="{{ url_for('edit_player', player_id=player.id) }}" class="text-blue-500 hover:underline text-sm">Edit</a>
+                        <a href="{{ url_for('add_travel_plan', player_id=player.id) }}" class="text-green-600 hover:underline text-sm">Add/Edit Travel Plan</a>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-600 mb-6">No players added yet. <a href="{{ url_for('add_player') }}">Add a player</a>.</p>
+    {% endif %}
+    <p><a href="{{ url_for('add_player') }}" class="btn-primary">Add New Player</a></p>
+{% endblock %}

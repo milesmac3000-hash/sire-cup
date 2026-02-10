@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Trip Info - Sire Cup{% endblock %}
+
+{% block content %}
+    <h1 class="mb-8">Edit Trip Information</h1>
+    <form method="POST" action="{{ url_for('edit_trip_info') }}" class="space-y-6">
+        <div>
+            <label for="title" class="block text-lg font-medium text-gray-700 mb-1">Trip Title:</label>
+            <input type="text" id="title" name="title" value="{{ trip_info.title }}" required
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="dates" class="block text-lg font-medium text-gray-700 mb-1">Dates:</label>
+            <input type="text" id="dates" name="dates" value="{{ trip_info.dates }}" required
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="location" class="block text-lg font-medium text-gray-700 mb-1">Location:</label>
+            <input type="text" id="location" name="location" value="{{ trip_info.location }}" required
+                   class="form-input">
+        </div>
+
+        <div>
+            <label for="message" class="block text-lg font-medium text-gray-700 mb-1">Message:</label>
+            <textarea id="message" name="message" rows="6" required
+                      class="form-input">{{ trip_info.message }}</textarea>
+        </div>
+
+        <div>
+            <label for="team_names" class="block text-lg font-medium text-gray-700 mb-1">Team Names (comma-separated, e.g., Team Augusta, Team Magnolia):</label>
+            <input type="text" id="team_names" name="team_names" value="{{ trip_info.get_team_names_list()|join(', ') }}" required
+                   class="form-input">
+            <p class="text-sm text-gray-500 mt-2">Enter team names, separated by commas. (e.g., Team Alpha, Team Beta)</p>
+        </div>
+
+        <div>
+            <button type="submit" class="btn-primary">
+                Save Changes
+            </button>
+        </div>
+    </form>
+    <p class="mt-8"><a href="{{ url_for('index') }}">Back to Dashboard</a></p>
+{% endblock %}
