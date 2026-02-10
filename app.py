@@ -88,7 +88,7 @@ class Round(db.Model):
     scores = db.relationship('PlayerRoundScore', backref='round', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f'<Round on {self.course.name} on {self.date.strftime('%Y-%m-%d')}>'
+        return f"<Round on {self.course.name} on {self.date.strftime('%Y-%m-%d')}>"
 
 class PlayerRoundScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
