@@ -143,6 +143,10 @@ class TripInfo(db.Model):
     def __repr__(self):
         return f'<TripInfo {self.title}>'
 
+# Create tables automatically on startup
+with app.app_context():
+    db.create_all()
+
 # Helper to get/create trip info
 def get_or_create_trip_info():
     trip_info = TripInfo.query.first()
